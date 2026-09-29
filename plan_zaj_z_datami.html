@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harmonogram Zajęć</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Płynne przewijanie i estetyczne detale */
+        html { scroll-behavior: smooth; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col font-sans">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-brand-100 text-brand-600 p-2 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900 leading-tight">Plan zajęć</h1>
+                        <p class="text-sm text-slate-500">Październik 2026</p>
+                    </div>
+                </div>
+                
+                <div class="relative w-full md:w-96">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="block w-full pl-10 pr-3 py-2.5 border border-slate-300 rounded-xl leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:bg-white transition-all shadow-sm sm:text-sm" 
+                        placeholder="Szukaj przedmiotu, prowadzącego, sali..."
+                    >
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div id="scheduleContainer" class="space-y-10">
+            <!-- Tutaj zostaną wyrenderowane poszczególne dni -->
+        </div>
+
+        <!-- Ekran braku wyników -->
+        <div id="noResults" class="hidden flex flex-col items-center justify-center py-20 px-4 text-center">
+            <div class="bg-slate-100 p-4 rounded-full mb-4">
+                <svg class="h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-slate-900 mb-1">Brak wyników</h3>
+            <p class="text-slate-500 max-w-sm">Nie znaleźliśmy żadnych zajęć spełniających kryteria wyszukiwania. Spróbuj zmienić zapytanie.</p>
+            <button onclick="document.getElementById('searchInput').value=''; document.getElementById('searchInput').dispatchEvent(new Event('input'))" class="mt-6 px-4 py-2 bg-white border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                Wyczyść wyszukiwanie
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        // Dane wyekstrahowane z dostarczonego dokumentu PDF
+        const rawData = [
+            // 1 Października
+            { data: "2026.10.01 czwartek", start: "9:40", end: "11:10", czas: "2h00m", wykladowca: "dr inż. Sławomir Jurkowski", przedmiot: "Grafika i komunikacja człowiek-komputer 30p2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.5", uwagi: "" },
+            
+            // 5 Października
+            { data: "2026.10.05 poniedziałek", start: "10:30", end: "12:45", czas: "3h00m", wykladowca: "dr hab. Zenon Jabłoński", przedmiot: "Metody probabilistyczne i statystyka", typ: "Ca", grupy: "C1/IS/s/2025S", sala: "WI WI 0.7", uwagi: "" },
+            { data: "2026.10.05 poniedziałek", start: "14:15", end: "15:45", czas: "2h00m", wykladowca: "mgr Marek Duło", przedmiot: "Język angielski", typ: "Lek", grupy: "Lek1/IS/s/2025S", sala: "WI WI 0.8", uwagi: "" },
+            { data: "2026.10.05 poniedziałek", start: "14:30", end: "16:00", czas: "2h00m", wykladowca: "mgr inż. Jacek Kaleta", przedmiot: "Technologia sieciowa 15h", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "WI WI 1.9", uwagi: "" },
+            { data: "2026.10.05 poniedziałek", start: "16:00", end: "17:30", czas: "2h00m", wykladowca: "mgr inż. Dawid Kotlarski", przedmiot: "Programowanie zaawansowane P2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.1", uwagi: "" },
+            { data: "2026.10.05 poniedziałek", start: "16:10", end: "17:40", czas: "2h00m", wykladowca: "mgr inż. Jan Kozieński", przedmiot: "Systemy operacyjne P2 30h", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.10A", uwagi: "" },
+            { data: "2026.10.05 poniedziałek", start: "17:50", end: "19:20", czas: "2h00m", wykladowca: "mgr inż. Jacek Kaleta", przedmiot: "Technologia sieciowa L2 30h", typ: "Lab", grupy: "L2/IS/s/2025S", sala: "WI WI 1.7", uwagi: "" },
+            { data: "2026.10.05 poniedziałek", start: "17:55", end: "19:25", czas: "2h00m", wykladowca: "mgr inż. Jan Kozieński", przedmiot: "Systemy operacyjne L2 15h Tydz.B", typ: "Lab", grupy: "L2/IS/s/2025S", sala: "WI WI 1.5", uwagi: "" },
+            
+            // 7 Października
+            { data: "2026.10.07 środa", start: "7:00", end: "9:15", czas: "3h00m", wykladowca: "dr hab. Witold Przygoda", przedmiot: "Programowanie zaawansowane", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            { data: "2026.10.07 środa", start: "10:00", end: "11:30", czas: "2h00m", wykladowca: "dr inż. Przemysław Pardel", przedmiot: "Inżynieria oprogramowania B* 15h", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            { data: "2026.10.07 środa", start: "13:15", end: "15:30", czas: "3h00m", wykladowca: "dr Zdzisław Pogoda", przedmiot: "Metody probabilistyczne i statystyka 30h", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            { data: "2026.10.07 środa", start: "16:30", end: "18:00", czas: "2h00m", wykladowca: "mgr inż. Nikodem Bulanda", przedmiot: "Konteneryzacja i wirtualizacja usług i systemów", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            
+            // 8 Października
+            { data: "2026.10.08 czwartek", start: "9:40", end: "11:10", czas: "2h00m", wykladowca: "dr inż. Sławomir Jurkowski", przedmiot: "Grafika i komunikacja człowiek-komputer 30p2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.5", uwagi: "" },
+            { data: "2026.10.08 czwartek", start: "11:30", end: "13:00", czas: "2h00m", wykladowca: "dr inż. Przemysław Pardel", przedmiot: "Systemy sztucznej inteligencji: analiza, projektowanie i integracja API* 30h P2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.2", uwagi: "" },
+            { data: "2026.10.08 czwartek", start: "16:25", end: "17:55", czas: "2h00m", wykladowca: "mgr inż. Jan Kozieński", przedmiot: "Zabezpieczenie działalności komputerowej* L2 30h", typ: "Lab", grupy: "L2/IS/s/2025S", sala: "WI WI 1.2", uwagi: "" },
+            { data: "2026.10.08 czwartek", start: "18:05", end: "19:35", czas: "2h00m", wykladowca: "mgr inż. Dawid Kotlarski", przedmiot: "Programowanie urządzeń mobilnych P2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.5", uwagi: "" },
+            
+            // 9 Października
+            { data: "2026.10.09 piątek", start: "9:00", end: "11:15", czas: "3h00m", wykladowca: "dr inż. Stanisława Plichta", przedmiot: "Systemy operacyjne 15h Tydz.A", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            { data: "2026.10.09 piątek", start: "14:00", end: "15:30", czas: "2h00m", wykladowca: "dr inż. Krzysztof Sułkowski", przedmiot: "Grafika i komunikacja człowiek-komputer 15h A", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            
+            // 12 Października
+            { data: "2026.10.12 poniedziałek", start: "10:30", end: "12:45", czas: "3h00m", wykladowca: "dr hab. Zenon Jabłoński", przedmiot: "Metody probabilistyczne i statystyka", typ: "Ca", grupy: "C1/IS/s/2025S", sala: "WI WI 0.7", uwagi: "" },
+            { data: "2026.10.12 poniedziałek", start: "14:45", end: "17:00", czas: "3h00m", wykladowca: "mgr inż. Jan Kozieński", przedmiot: "Systemy operacyjne P2 30h", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.10A", uwagi: "" },
+            { data: "2026.10.12 poniedziałek", start: "17:10", end: "19:25", czas: "3h00m", wykladowca: "mgr inż. Jacek Kaleta", przedmiot: "Technologia sieciowa L2 30h", typ: "Lab", grupy: "L2/IS/s/2025S", sala: "WI WI 1.7", uwagi: "" },
+
+            // 13 Października
+            { data: "2026.10.13 wtorek", start: "14:15", end: "15:45", czas: "2h00m", wykladowca: "mgr Marek Duło", przedmiot: "Język angielski", typ: "Lek", grupy: "Lek1/IS/s/2025S", sala: "WI WI 0.8", uwagi: "" },
+            { data: "2026.10.13 wtorek", start: "16:00", end: "17:30", czas: "2h00m", wykladowca: "mgr inż. Dawid Kotlarski", przedmiot: "Programowanie zaawansowane P2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.1", uwagi: "" },
+
+            // 14 Października
+            { data: "2026.10.14 środa", start: "7:00", end: "9:15", czas: "3h00m", wykladowca: "dr hab. Witold Przygoda", przedmiot: "Systemy sztucznej inteligencji: analiza, projektowanie i integracja API*", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            { data: "2026.10.14 środa", start: "10:00", end: "11:30", czas: "2h00m", wykladowca: "dr inż. Przemysław Pardel", przedmiot: "Inżynieria oprogramowania B* 15h", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            { data: "2026.10.14 środa", start: "13:15", end: "15:30", czas: "3h00m", wykladowca: "dr Zdzisław Pogoda", przedmiot: "Metody probabilistyczne i statystyka 30h", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+
+            // 15 Października
+            { data: "2026.10.15 czwartek", start: "9:40", end: "11:10", czas: "2h00m", wykladowca: "dr inż. Sławomir Jurkowski", przedmiot: "Grafika i komunikacja człowiek-komputer 30p2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.5", uwagi: "" },
+            { data: "2026.10.15 czwartek", start: "11:30", end: "13:00", czas: "2h00m", wykladowca: "dr inż. Przemysław Pardel", przedmiot: "Systemy sztucznej inteligencji: analiza, projektowanie i integracja API* 30h P2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.2", uwagi: "" },
+            { data: "2026.10.15 czwartek", start: "16:25", end: "17:55", czas: "2h00m", wykladowca: "mgr inż. Jan Kozieński", przedmiot: "Zabezpieczenie działalności komputerowej* L2 30h", typ: "Lab", grupy: "L2/IS/s/2025S", sala: "WI WI 1.2", uwagi: "" },
+            { data: "2026.10.15 czwartek", start: "18:05", end: "19:35", czas: "2h00m", wykladowca: "mgr inż. Dawid Kotlarski", przedmiot: "Programowanie urządzeń mobilnych P2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.5", uwagi: "" },
+
+            // 16 Października
+            { data: "2026.10.16 piątek", start: "9:00", end: "11:15", czas: "3h00m", wykladowca: "dr inż. Stanisława Plichta", przedmiot: "Programowanie urządzeń mobilnych 15h Tydz.B", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+
+            // 19 Października
+            { data: "2026.10.19 poniedziałek", start: "10:30", end: "12:45", czas: "3h00m", wykladowca: "dr hab. Zenon Jabłoński", przedmiot: "Metody probabilistyczne i statystyka", typ: "Ca", grupy: "C1/IS/s/2025S", sala: "WI WI 0.7", uwagi: "" },
+            { data: "2026.10.19 poniedziałek", start: "14:30", end: "16:00", czas: "2h00m", wykladowca: "mgr inż. Jacek Kaleta", przedmiot: "Technologia sieciowa 15h", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "WI WI 1.9", uwagi: "" },
+            { data: "2026.10.19 poniedziałek", start: "16:10", end: "17:40", czas: "2h00m", wykladowca: "mgr inż. Jan Kozieński", przedmiot: "Systemy operacyjne P2 30h", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.10A", uwagi: "" },
+            { data: "2026.10.19 poniedziałek", start: "17:50", end: "19:20", czas: "2h00m", wykladowca: "mgr inż. Jacek Kaleta", przedmiot: "Technologia sieciowa L2 30h", typ: "Lab", grupy: "L2/IS/s/2025S", sala: "WI WI 1.7", uwagi: "" },
+
+            // 20 Października
+            { data: "2026.10.20 wtorek", start: "11:00", end: "12:30", czas: "2h00m", wykladowca: "mgr Marek Duło", przedmiot: "Język angielski", typ: "Lek", grupy: "Lek1/IS/s/2025S", sala: "WI WI 0.8", uwagi: "" },
+            { data: "2026.10.20 wtorek", start: "12:40", end: "14:55", czas: "3h00m", wykladowca: "mgr inż. Nikodem Bulanda", przedmiot: "Konteneryzacja i wirtualizacja usług i systemów L2 15h", typ: "Lab", grupy: "L2/IS/s/2025S", sala: "WI WI 1.2", uwagi: "" },
+            { data: "2026.10.20 wtorek", start: "16:00", end: "17:30", czas: "2h00m", wykladowca: "mgr inż. Dawid Kotlarski", przedmiot: "Programowanie zaawansowane P2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.1", uwagi: "" },
+            { data: "2026.10.20 wtorek", start: "17:55", end: "19:25", czas: "2h00m", wykladowca: "mgr inż. Jan Kozieński", przedmiot: "Systemy operacyjne L2 15h Tydz.B", typ: "Lab", grupy: "L2/IS/s/2025S", sala: "WI WI 1.5", uwagi: "" },
+
+            // 21 Października
+            { data: "2026.10.21 środa", start: "7:00", end: "9:15", czas: "3h00m", wykladowca: "dr hab. Witold Przygoda", przedmiot: "Programowanie zaawansowane", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            { data: "2026.10.21 środa", start: "10:00", end: "11:30", czas: "2h00m", wykladowca: "dr inż. Przemysław Pardel", przedmiot: "Inżynieria oprogramowania B* 15h", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            { data: "2026.10.21 środa", start: "13:15", end: "15:30", czas: "3h00m", wykladowca: "dr Zdzisław Pogoda", przedmiot: "Metody probabilistyczne i statystyka 30h", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            { data: "2026.10.21 środa", start: "16:30", end: "18:00", czas: "2h00m", wykladowca: "mgr inż. Nikodem Bulanda", przedmiot: "Konteneryzacja i wirtualizacja usług i systemów", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+
+            // 22 Października
+            { data: "2026.10.22 czwartek", start: "9:40", end: "11:10", czas: "2h00m", wykladowca: "dr inż. Sławomir Jurkowski", przedmiot: "Grafika i komunikacja człowiek-komputer 30p2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.5", uwagi: "" },
+            { data: "2026.10.22 czwartek", start: "11:30", end: "13:00", czas: "2h00m", wykladowca: "dr inż. Przemysław Pardel", przedmiot: "Systemy sztucznej inteligencji: analiza, projektowanie i integracja API* 30h P2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.2", uwagi: "" },
+            { data: "2026.10.22 czwartek", start: "16:25", end: "17:55", czas: "2h00m", wykladowca: "mgr inż. Jan Kozieński", przedmiot: "Zabezpieczenie działalności komputerowej* L2 30h", typ: "Lab", grupy: "L2/IS/s/2025S", sala: "WI WI 1.2", uwagi: "" },
+            { data: "2026.10.22 czwartek", start: "18:05", end: "19:35", czas: "2h00m", wykladowca: "mgr inż. Dawid Kotlarski", przedmiot: "Programowanie urządzeń mobilnych P2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.5", uwagi: "" },
+
+            // 23 Października
+            { data: "2026.10.23 piątek", start: "9:00", end: "11:15", czas: "3h00m", wykladowca: "dr inż. Stanisława Plichta", przedmiot: "Systemy operacyjne 15h Tydz.A", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            { data: "2026.10.23 piątek", start: "14:00", end: "15:30", czas: "2h00m", wykladowca: "dr inż. Krzysztof Sułkowski", przedmiot: "Grafika i komunikacja człowiek-komputer 15h A", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+
+            // 26 Października
+            { data: "2026.10.26 poniedziałek", start: "10:30", end: "12:45", czas: "3h00m", wykladowca: "dr hab. Zenon Jabłoński", przedmiot: "Metody probabilistyczne i statystyka", typ: "Ca", grupy: "C1/IS/s/2025S", sala: "WI WI 0.7", uwagi: "" },
+            { data: "2026.10.26 poniedziałek", start: "14:45", end: "17:00", czas: "3h00m", wykladowca: "mgr inż. Jan Kozieński", przedmiot: "Systemy operacyjne P2 30h", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.10A", uwagi: "" },
+            { data: "2026.10.26 poniedziałek", start: "17:10", end: "19:25", czas: "3h00m", wykladowca: "mgr inż. Jacek Kaleta", przedmiot: "Technologia sieciowa L2 30h", typ: "Lab", grupy: "L2/IS/s/2025S", sala: "WI WI 1.7", uwagi: "" },
+
+            // 27 Października
+            { data: "2026.10.27 wtorek", start: "12:00", end: "13:30", czas: "2h00m", wykladowca: "mgr Marek Duło", przedmiot: "Język angielski", typ: "Lek", grupy: "Lek1/IS/s/2025S", sala: "WI WI 0.8", uwagi: "" },
+            { data: "2026.10.27 wtorek", start: "14:10", end: "15:40", czas: "2h00m", wykladowca: "mgr inż. Nikodem Bulanda", przedmiot: "Konteneryzacja i wirtualizacja usług i systemów L2 15h", typ: "Lab", grupy: "L2/IS/s/2025S", sala: "WI WI 1.2", uwagi: "" },
+            { data: "2026.10.27 wtorek", start: "16:00", end: "17:30", czas: "2h00m", wykladowca: "mgr inż. Dawid Kotlarski", przedmiot: "Programowanie zaawansowane P2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.1", uwagi: "" },
+
+            // 28 Października
+            { data: "2026.10.28 środa", start: "7:00", end: "9:15", czas: "3h00m", wykladowca: "dr hab. Witold Przygoda", przedmiot: "Systemy sztucznej inteligencji: analiza, projektowanie i integracja API*", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            { data: "2026.10.28 środa", start: "10:00", end: "11:30", czas: "2h00m", wykladowca: "dr inż. Przemysław Pardel", przedmiot: "Inżynieria oprogramowania B* 15h", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+            { data: "2026.10.28 środa", start: "13:15", end: "15:30", czas: "3h00m", wykladowca: "dr Zdzisław Pogoda", przedmiot: "Metody probabilistyczne i statystyka 30h", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" },
+
+            // 29 Października
+            { data: "2026.10.29 czwartek", start: "9:40", end: "11:10", czas: "2h00m", wykladowca: "dr inż. Sławomir Jurkowski", przedmiot: "Grafika i komunikacja człowiek-komputer 30p2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.5", uwagi: "" },
+            { data: "2026.10.29 czwartek", start: "11:30", end: "13:00", czas: "2h00m", wykladowca: "dr inż. Przemysław Pardel", przedmiot: "Systemy sztucznej inteligencji: analiza, projektowanie i integracja API* 30h P2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.2", uwagi: "" },
+            { data: "2026.10.29 czwartek", start: "16:25", end: "17:55", czas: "2h00m", wykladowca: "mgr inż. Jan Kozieński", przedmiot: "Zabezpieczenie działalności komputerowej* L2 30h", typ: "Lab", grupy: "L2/IS/s/2025S", sala: "WI WI 1.2", uwagi: "" },
+            { data: "2026.10.29 czwartek", start: "18:05", end: "19:35", czas: "2h00m", wykladowca: "mgr inż. Dawid Kotlarski", przedmiot: "Programowanie urządzeń mobilnych P2", typ: "Proj", grupy: "P2/IS/s/2025S", sala: "WI WI 1.5", uwagi: "" },
+
+            // 30 Października
+            { data: "2026.10.30 piątek", start: "9:00", end: "11:15", czas: "3h00m", wykladowca: "dr inż. Stanisława Plichta", przedmiot: "Programowanie urządzeń mobilnych 15h Tydz.B", typ: "Wyk", grupy: "W/IS/s/2025S", sala: "E-learning", uwagi: "E-learning" }
+        ];
+
+        function getTypeStyles(typ) {
+            switch(typ) {
+                case 'Wyk': return 'bg-blue-100 text-blue-800 border-blue-200';
+                case 'Lab': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+                case 'Proj': return 'bg-purple-100 text-purple-800 border-purple-200';
+                case 'Ca': return 'bg-orange-100 text-orange-800 border-orange-200';
+                case 'Lek': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                default: return 'bg-slate-100 text-slate-800 border-slate-200';
+            }
+        }
+
+        function getRoomStyles(sala) {
+            if (!sala || sala.toLowerCase().includes('e-learning')) {
+                return 'bg-pink-50 text-pink-700 border-pink-200 ring-1 ring-pink-500/20';
+            }
+            return 'bg-slate-100 text-slate-700 border-slate-200';
+        }
+
+        function getRoomText(sala) {
+            if (!sala || sala.toLowerCase().includes('e-learning')) {
+                return `<svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>E-learning`;
+            }
+            return `<svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>${sala}`;
+        }
+
+        function renderSchedule(dataArray) {
+            const container = document.getElementById('scheduleContainer');
+            const noResults = document.getElementById('noResults');
+            
+            container.innerHTML = '';
+            
+            if (dataArray.length === 0) {
+                container.classList.add('hidden');
+                noResults.classList.remove('hidden');
+                return;
+            } else {
+                container.classList.remove('hidden');
+                noResults.classList.add('hidden');
+            }
+
+            // Grupowanie zajęć po dacie
+            const groupedData = dataArray.reduce((acc, item) => {
+                if (!acc[item.data]) {
+                    acc[item.data] = [];
+                }
+                acc[item.data].push(item);
+                return acc;
+            }, {});
+
+            // Renderowanie HTML dla każdego dnia
+            Object.keys(groupedData).forEach(date => {
+                const dayClasses = groupedData[date];
+                
+                // Parsowanie części dnia (np. "2026.10.01", "czwartek")
+                const [dateStr, dayName] = date.split(' ');
+                
+                const section = document.createElement('section');
+                section.className = 'relative';
+
+                // Nagłówek dnia z lepką pozycją
+                const dateHeader = `
+                    <div class="sticky top-[72px] z-20 bg-slate-50/95 backdrop-blur-sm py-3 mb-4 -mx-4 px-4 sm:mx-0 sm:px-0 flex items-baseline gap-3 border-b border-slate-200">
+                        <h2 class="text-xl font-bold text-slate-900">${dateStr}</h2>
+                        <span class="text-sm font-medium text-slate-500 capitalize">${dayName || ''}</span>
+                    </div>
+                `;
+
+                // Karty zajęć dla danego dnia
+                const cardsHTML = dayClasses.map(item => `
+                    <article class="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden flex flex-col md:flex-row mb-4">
+                        
+                        <!-- Sekcja czasu i typu -->
+                        <div class="bg-slate-50 md:w-48 shrink-0 flex flex-row md:flex-col justify-between items-center md:items-start p-4 border-b md:border-b-0 md:border-r border-slate-100">
+                            <div>
+                                <div class="text-lg font-bold text-slate-900">${item.start}</div>
+                                <div class="text-sm text-slate-500 mb-1">${item.end} <span class="text-xs">(${item.czas})</span></div>
+                            </div>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold border uppercase tracking-wide mt-0 md:mt-auto ${getTypeStyles(item.typ)}">
+                                ${item.typ}
+                            </span>
+                        </div>
+
+                        <!-- Sekcja detali -->
+                        <div class="p-4 md:p-5 flex-grow flex flex-col justify-center">
+                            <h3 class="text-base font-bold text-slate-900 leading-snug mb-1 pr-4">${item.przedmiot}</h3>
+                            
+                            <div class="flex items-center text-sm text-slate-600 mb-4">
+                                <svg class="w-4 h-4 mr-1.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <span class="font-medium">${item.wykladowca}</span>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-2 mt-auto">
+                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium border ${getRoomStyles(item.sala)}">
+                                    ${getRoomText(item.sala)}
+                                </span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                    ${item.grupy}
+                                </span>
+                            </div>
+                        </div>
+
+                    </article>
+                `).join('');
+
+                section.innerHTML = dateHeader + `<div>${cardsHTML}</div>`;
+                container.appendChild(section);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Renderuj domyślnie całość
+            renderSchedule(rawData);
+
+            // Podłączenie eventu wyszukiwania
+            const searchInput = document.getElementById('searchInput');
+            
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase().trim();
+                
+                if (term === '') {
+                    renderSchedule(rawData);
+                    return;
+                }
+
+                const filteredData = rawData.filter(item => {
+                    return (
+                        item.przedmiot.toLowerCase().includes(term) ||
+                        item.wykladowca.toLowerCase().includes(term) ||
+                        item.sala.toLowerCase().includes(term) ||
+                        item.grupy.toLowerCase().includes(term) ||
+                        item.typ.toLowerCase().includes(term)
+                    );
+                });
+
+                renderSchedule(filteredData);
+            });
+        });
+    </script>
+</body>
+</html>
